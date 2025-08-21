@@ -27,6 +27,12 @@ dependencies {
 	// PDF 파일 텍스트 읽기
 	implementation 'org.apache.pdfbox:pdfbox:3.0.2'
 
+	// HTML 파싱
+	implementation 'org.jsoup:jsoup:1.17.2'
+
+	// Selenium (Headless Browser)
+	implementation 'org.seleniumhq.selenium:selenium-java:4.22.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

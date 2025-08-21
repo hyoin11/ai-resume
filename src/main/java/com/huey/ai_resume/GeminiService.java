@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -24,23 +23,25 @@ public class GeminiService {
     }
 
     public Mono<String> getChatResponse(String userQuestion) {
-        byte[] resumeBytes = resumeService.getResumeBytes();
-        if (resumeBytes == null) {
-            return Mono.just("이력서 파일을 불러오는데 실패했습니다.");
+        String resumeContent = resumeService.getResumeText();
+        if (resumeContent == null || resumeContent.isBlank()) {
+            return Mono.just("이력서 내용을 불러오는데 실패했습니다.");
         }
-        String base64Resume = Base64.getEncoder().encodeToString(resumeBytes);
 
-        String prompt = "첨부된 이력서를 바탕으로 다음 질문에 답변해 주세요. 이력서에 없는 내용은 \"이력서에 해당 내용이 없습니다.\" 라고 명확하게 답변해주세요. 절대로 내용을 추측하거나 지어내지 마세요. 질문: " + userQuestion;
+        String prompt = String.format(
+            "당신은 제공된 이력서 내용을 바탕으로 질문에 답변하는 AI 챗봇입니다. " +
+            "아래에 제공된 이력서 내용만을 근거로 답변해야 합니다. " +
+            "이력서에 없는 내용은 \"이력서에서 해당 내용을 찾을 수 없습니다.\" 라고 명확하게 답변해주세요. " +
+            "만약 여러 프로젝트나 항목에 대해 답변할 때, 질문과 관련된 내용이 없는 프로젝트나 항목은 답변에서 아예 제외하고 언급하지 마세요. " +
+            "절대로 내용을 추측하거나 지어내지 마세요.\n\n" +
+            "--- 이력서 내용 시작 ---\n%s\n--- 이력서 내용 끝 ---\n\n" +
+            "[질문]: %s",
+            resumeContent, userQuestion
+        );
 
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt),
-                                Map.of("inlineData", Map.of(
-                                        "mimeType", "application/pdf",
-                                        "data", base64Resume
-                                ))
-                        ))
+                        Map.of("parts", List.of(Map.of("text", prompt)))
                 )
         );
 
